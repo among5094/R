@@ -13,8 +13,8 @@ library(ggplot2)
 # API의 End Point URL
 api <- "http://apis.data.go.kr/B552584/ArpltnStatsSvc/getCtprvnMesureLIst"
 
-# API 인증키 (공공데이터 포털에서 발급받은 키를 입력)
-api_key <- "RbxkM3C1miKISOb%2FYf28pvExZNQvE1KwHGw6SSIos9tHCdDG0brdBIvfyCXkpOhVTv3d8twnCSKhD%2FiHZ7PwWA%3D%3D"
+# API 인증키 (공공데이터 포털에서 발급받은 키를 입력 -> 일반 인증키(Encoding) 추가하기! )
+api_key <- "ctblSVIlq4G8POwFjJsKfIV%2F0lzVCruQ2CW0SRmSkIQhKVJGlhMoUhhMAqwWNwPnB%2FhJhfVubvDudXMil10tpg%3D%3D"
 
 # 요청변수
 numOfRows <- 10 # 한 페이지에 보여줄 데이터 개수
@@ -26,28 +26,31 @@ searchCondition <- "MONTH" # 조회 조건 (MONTH: 월간)
 # 요청 URL 생성
 url <- paste(api,
              "?serviceKey=", api_key, # 서비스 키 추가
-             "&numOfRows=", numOfRows, # 한 페이지 데이터 수 추가
+             "&numOfRows=", numOfRows, # 한 페이지에 포함할 데이터 개수
              "&pageNo=", pageNo, # 페이지 번호 추가
              "&itemCode=", itemCode, # 조회 항목 코드 추가
              "&dataGubun=", dataGubun, # 데이터 구분 추가
              "&searchCondition=", searchCondition, # 조회 조건 추가
              sep="")
 
-# 생성된 URL 출력
 url
 
 # XML 문서 다운로드 및 파싱
+# xmlParse() 함수는 XML 데이터를 파싱하여 데이터를 구조적이고 계층적인 객체로 변환한다.
 xmlFile <- xmlParse(url) # API로 호출한 XML 데이터를 파싱하여 XML 문서 객체 생성
 xmlFile
 
 # XML 데이터를 데이터프레임으로 변환
+# # XML 문서에서 "//items/item" 경로의 노드를 추출하여 데이터프레임 형식으로 변환
 df <- xmlToDataFrame(getNodeSet(xmlFile, "//items/item"))
 df
 
+# 시간대별 서울지역의 미세먼지 농도 변화를 막대그래프로 시각화
 ggplot(data=df, aes(x=dataTime, y=seoul)) +
   geom_bar(stat="identity", fill="orange") +
   theme(axis.text.x=element_text(angle=90)) +
   labs(title="시간대별 서울지역의 미세먼지 농도 변화", x = "측정일시", y = "농도")
+
 
 # 8.4 지역별 미세먼지 농도의 지도 분포포
 
