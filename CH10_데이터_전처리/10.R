@@ -1,11 +1,12 @@
-## R 코딩 플러스 
+## R 코딩 플러스 - 11월 19일 화요일
 
-# 10.2
+# 10.2 데이터 프로파일링
 
+# 예제 데이터 만들기
 W <- c("가", "나", "", "라", "마", "바", "사", "아", "아", "차") 
 X <- c(1, 2, 3, NA, 5, 6, 7, 8, 9, 0)
-Y <- c(10, 20, NULL, 40, 50, NaN, 70, 80, 90, 100, 110)
-Z <- c(5, 10/0, Inf, -20/0, -Inf, 0/0, NaN, 40, 45, 50)
+Y <- c(10, 20, NULL, 40, 50, NaN, 70, 80, 90, 100, 110) # NULL로 지정된 부분으 실행 시에 사라짐
+Z <- c(5, 10/0, Inf, -20/0, -Inf, 0/0, NaN, 40, 45, 50) # 10/0은 Inf로, -20/0은 -Inf로 변환됨
 df <- data.frame(W, X, Y, Z)
 df
 
@@ -15,26 +16,25 @@ str(df)
 # 요약보기
 summary(df)
 
-# W열에 대한 빈문자열 확인인
+# W열에 대한 빈문자열 확인
 nzchar(df$W)
 
-# 가 열별 빈문자열 확인인(1은 행, 2는 열)
+# 각 열별 빈문자열 확인(1은 행, 2는 열)
 empty <- apply(df, 2, nzchar)
 empty
 
-# 각 열별 합계(빈문자열의 수수)
+# 각 열별 합계(빈문자열의 수)
 colSums(!empty)
 
-# 각 열별 합계(빈문자열의 수수)
+# 각 행별 합계(빈문자열의 수)
 rowSums(!empty)
 
 # 결측치 여부
 is.na(df)
 
-# 결측치의 총수, 열별 결측치의 수, 행별 결측치의 수수
-sum(is.na(df))
-colSums(is.na(df))
-rowSums(is.na(df))
+sum(is.na(df))# 결측치의 총수
+colSums(is.na(df)) # 열별 결측치의 수
+rowSums(is.na(df)) # 행별 결측치의 수
 
 # Inf(무한대) 여부
 is.infinite(df$Z)
@@ -90,15 +90,17 @@ ggpairs(data = iris,
         aes(color = Species, alpha = 0.5),
         upper = list(continuous = wrap("cor", size = 2.5)))
 
-# 10.3
+# 10.3 데이터 정제
 
-# 결측치가 있는 행 삭제, 각 열에서 NA와  NaN이 있는 4~7행이 삭제됨됨
+# 결측치가 있는 행 삭제
+# 각 열에서 NA와  NaN이 있는 4~7행이 삭제됨됨
 df2 <- na.omit(df)
 df2 
 
 install.packages("dplyr")
 library(dplyr)   
 
+# 조건에 맞는 행 추출
 # df에서 Z열이 유한한 값을 갖는 행 추출출
 df2 <- filter(df, is.finite(Z))
 df2
@@ -108,34 +110,35 @@ df2 <- filter(df, nzchar(W)    & is.finite(X) &
                   is.finite(Y) & is.finite(Z))
 df2
 
+# 조건에 맞는 행과 열의 추출
 df2 <- subset(df, nzchar(W)    & is.finite(X) &
                   is.finite(Y) & is.finite(Z),
               select = c(W, X))
 df2
 
-df3 <- df
-df3$X[df3$X == 0]    <- 10
-
-# df에서 X열의 값이 NA인 경우 4로 수정정
-df3$X[is.na(df3$X)]  <- 4
-df3$Y[is.nan(df3$Y)] <- 60
-df3$Z[is.nan(df3$Z)] <- 30
-df3$Z[df3$Z >= Inf]  <- 10
-df3$Z[df3$Z <= -Inf] <- 20
-df3$W[df3$W == ""]   <- "Unknown"
+# 조건에 해당하는 데이터이 임의 수정(1)
+df3 <- df # 데이터 복사
+df3$X[df3$X == 0]<- 10 # df3의 X열의 값이 0인 경우 해당 값을 10으로 변경
+df3$X[is.na(df3$X)]  <- 4 # df3의 X열의 값이 na(결측치)라면 4로 변경
+df3$Y[is.nan(df3$Y)] <- 60 # df3의 Y열에서 값이 NaN(정의되지 않은 값)인 경우 값을 60으로 변경
+df3$Z[is.nan(df3$Z)] <- 30 # df3에서 Z열의 값이 NaN(정의되지 않은 값)이라면 해당 값을 30으로 변경
+df3$Z[df3$Z >= Inf]  <- 10 # df3의 Z열의 값이 Inf(양의 무한대)이면 10으로 교체
+df3$Z[df3$Z <= -Inf] <- 20 # df3의 Z열의 값이 -Inf(음의 무한대)이면 해당 값을 20으로 교체
+df3$W[df3$W == ""]   <- "Unknown" # df3의 W열이 공백이면 "Unknown"이라는 문자열로 변경
 df3
 
-df3 <- df
-df3$X[df3$X == 0]    <- 10
-df3$X[is.na(df3$X)]  <- mean(df3$X[is.finite(df3$X)])
-df3$Y[is.nan(df3$Y)] <- median(df3$Y[is.finite(df3$Y)])
-df3$Z[is.nan(df3$Z)] <- mean(df3$Z[is.finite(df3$Z)])
-df3$Z[df3$Z >= Inf]  <- max(df3$Z[is.finite(df3$Z)])
-df3$Z[df3$Z <= -Inf] <- min(df3$Z[is.finite(df3$Z)])
-df3$W[df3$W == ""]   <- "다"
+# 조건에 해당하는 데이터이 임의 수정(2)
+df3 <- df # 데이터복사
+df3$X[df3$X == 0]    <- 10 # df3의 X열의 값이 0이면 10으로 변경
+df3$X[is.na(df3$X)]  <- mean(df3$X[is.finite(df3$X)]) # df3의 X열의 값이 NA(결측치)라면 df3의 X열에서 유효한 값(Inf, -Inf 제외)의 평균값으로 변경
+df3$Y[is.nan(df3$Y)] <- median(df3$Y[is.finite(df3$Y)]) # df3의 Y열의 값이 NaN(정의되지 않은 값)이면 df3의 Y열의 유한한 값의 중앙값으로 변경
+df3$Z[is.nan(df3$Z)] <- mean(df3$Z[is.finite(df3$Z)]) # df3의 X열의 값이 NaN이면 df3의 Z열의 유한한 값의 평균으로 변경
+df3$Z[df3$Z >= Inf]  <- max(df3$Z[is.finite(df3$Z)]) # df3의 Z열의 값이 Inf이면 df3의 Z열의 최대값으로 변경
+df3$Z[df3$Z <= -Inf] <- min(df3$Z[is.finite(df3$Z)]) # df3의 Z열의 값이 -Inf이면 df3의 Z열의 최소값으로 변경
+df3$W[df3$W == ""]   <- "다" # df3의 W열에 값이 비어있다면 "다"로 변경
 df3
 
-# 10.4
+# 10.4 데이터 통합
 
 install.packages("dplyr")  
 library("dplyr") 
@@ -145,15 +148,15 @@ df1
 df2 <- data.frame(ID=2:4, 경력=c(7, 5, 10))
 df2
 
-# 내부 조인
+# 내부 조인- 공통 키값을 기준으로 병합
 inner_join(df1, df2, by = "ID") 
 
-# 왼쪽 외부 조인 <- ?
+# 왼쪽 외부 조인 <- 왼쪽 df의 키 값인 1~3을 기준으로 병합
 left_join(df1,df2,   by = "ID") 
 
-# 오른쪽 외부 조인 
+# 오른쪽 외부 조인 - 오른쪽 df의 키 값인 2~4를 기준으로 병합
 right_join(df1,df2,  by = "ID") 
 
-# 전체 조인
+# 전체 조인 - 모든 키 값인 1~4를 기준으로 병합
 full_join(df1,df2,   by = "ID") 
 
