@@ -1,104 +1,121 @@
 ## R 코딩 플러스 
 
-# 11.2
+# 11.2 표본추출과 난수
 
+# (1) 표분 추출
+# 복원추출: 추출된 샘플을 다시 모집단에 돌려놓고 다음 샘플을 뽑는 방식
 sample(1:10, 5, replace = T)
 sample(c("앞면", "뒷면"), 5, replace=T)
+
+# 비복원 추출: 추출된 샘플을 다시 모집단에 돌려놓지 않고 다음 샘플을 뽑는 방식
 sample(1:10, 5, replace = F)
 sample(c("앞면", "뒷면"), 2, replace=F)
 
+# (2) 난수
 # 0~1사이의 균등분포에서 10개 난수 추출출
 runif(10, min=0, max=1)
 
-# 11.3
+# 11.3 동전 던지기
 
 # install.packages("ggplot2")
 library(ggplot2)
 
-iteration <- 1000
-prob <- NULL
-count <- 0
+# (1) 변수 초기화 부분
+iteration <- 1000 # 최대 반복수
+prob <- NULL # 누적 비율
+count <- 0 # 동전 앞면이 나온 횟수수
 
+# 동전 던지기 반복
 for(x in 1:iteration) {
+  
+  # (2) 동전 던지기
   coin <- sample(c("앞면", "뒷면"), 1, replace=T)
   
+  # (3) 동전이 앞면인 경우, 횟수 1 증가
   if (coin == "앞면")
     count = count + 1
   
+  # (4) 누적 비율 증가
   prob <- c(prob, round(count / x, 2))
 }
 
-df.coin<- data.frame("반복수"=1:iteration, "누적확률"=prob) 
+# (5) 동전 던지기의 반복에 따른 누적비율의 데이터 프레임
+df.coin<- data.frame("반복수"=1:iteration, "누적확률"=prob)
+
+# 데이터 확인
 head(df.coin)
 tail(df.coin)
 
+
+# (2) 실험 결과 그래프로 그리는 부분
 ggplot(data=df.coin, aes(x=반복수, y=누적확률, group=1)) +
   geom_line(color="blue", size=1) +
   geom_point() +
   geom_hline(yintercept=0.5, color="red") +
   labs(title="동전 던진 횟수에 따른 누적확률의 변화")
 
-# 11.4
+# 11.4 원주율 구하기
 
 # install.packages("ggplot2")
 # install.packages("ggforce")
 library(ggplot2)
 library(ggforce)
 
-# 반복회수
-iteration <- 100
+# 원주율 계산
 
-#원내의 점의 수
-N.circle  <- 0
-
-# 원주율
-PI <- NULL
-
-#점의 위치
-pts <- NULL
+# (1) 변수 쵸기화
+iteration <- 100 # 반복 횟수(샘플 점의 수)
+N.circle  <- 0 # 원 내부에 위치한 점의 수
+PI <- NULL # 원주율을 저장할 벡터
+pts <- NULL #점의 좌표를 저장할 행렬
 
 for(k in 1: iteration) {
-  # 사각형 내의 점의 위치치
-  x <- runif(1, min=0, max=1)
-  y <- runif(1, min=0, max=1)
   
-  pts <- rbind(pts, c(x, y))
+  # (2) 사각형 내의 점의 위치
+  x <- runif(1, min=0, max=1) # x좌표: 0에서 1 사이의 난수
+  y <- runif(1, min=0, max=1) # y좌표: 0에서 1 사이의 난수
+  
+  pts <- rbind(pts, c(x, y)) # 생성된 점의 좌표를 행렬에 추가
 
-  # 거리 계산산
-  dist <- sqrt(x ^2 + y ^2)
+  # (3) 거리 계산
+  dist <- sqrt(x ^2 + y ^2) # 점 (x, y)에서 원점 (0, 0)까지의 거리
+  
+  # (4) 거리가 1이하이면, 원 내의 점의 수 증가
   if (dist <= 1)
     N.circle <- N.circle + 1
   
-  # 시행 횟수까지의 원주율 계산
-  pi.sim <- 4 * N.circle / k
-  PI <- c(PI, pi.sim)
+  # (5) 시행 횟수까지의 원주율 계산
+  pi.sim <- 4 * N.circle / k # 원주율 추정치
+  PI <- c(PI, pi.sim) # 추정치를 벡터에 추가
 }
 
-# 시행횟수에 따른 원주율 데이;터 세트트
+# 시행횟수에 따른 원주율 데이터 세트
 PI.df <- data.frame("반복수"=1:iteration, "원주율"=PI) 
+
+# 데이터 확인
 head(PI.df)
 tail(PI.df)
 
+# (2) 실험결과 그래프
 ggplot(data=PI.df, aes(x=반복수, y=원주율, group=1)) +
   geom_line(color="blue", size=1) +
   geom_point() +
   geom_hline(yintercept=pi, color="red") +
   labs(title="시행횟수에 따른 원주율의 변화") 
 
-# 시행횟수에 따른 점의 분포, 행렬을 데이터 프레임으로 변환
-pts.df <- as.data.frame(pts)
+# 시행횟수에 따른 점의 분포
 
-# 데이터 프레임의 열 이름 설정정
-colnames(pts.df) <- c("X", "Y")
+pts.df <- as.data.frame(pts) #행렬을 데이터 프레임으로 변환
+colnames(pts.df) <- c("X", "Y")# 데이터 프레임의 열 이름 설정
 head(pts.df)
 
 ggplot() +
   geom_point(data=pts.df, aes(x=X, y=Y)) +
   labs(title="시행횟수에 따른 점의 분포") + 
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
-  # geom_circle(aes(x0 = 0, y0 = 0, r = 1), col="red", inherit.aes = FALSE)
+  geom_circle(aes(x0 = 0, y0 = 0, r = 1), col="red", inherit.aes = FALSE)
   # 원점을 중심으로 반경 1인 적생 원을 그린다
-  geom_circle(aes(x0 = 0, y0 = 0, r = 1), col="red")
+  # geom_circle(aes(x0 = 0, y0 = 0, r = 1), col="red")
 
 # 11.5 회귀선 구하기기
 
